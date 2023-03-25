@@ -1,16 +1,16 @@
 import express from "express";
-
+import { createDB } from "./config/db.js";
+import productRoute from "./routes/productApi.js";
+import userRoute from "./routes/userApi.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use((req,res,next)=>
-{
-    console.log('hey i am in the middleware')
-    next();
-})
+//Connect MONGODB
+createDB();
 
-app.get("/",(req,res)=>{
-    res.send("hello from my ecommerce app");
-})
+//Define Routes and APIS
+app.use("/api/users",userRoute)
+app.use("/api/products",productRoute)
+
 
 app.listen(PORT, ()=> console.log(`server running at PORT ${PORT}`))
