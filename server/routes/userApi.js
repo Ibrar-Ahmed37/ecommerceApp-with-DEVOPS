@@ -1,6 +1,7 @@
 import express from "express";
 import User from "../models/User.js";
 import expressValidator from "express-validator";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 const { check, validationResult } = expressValidator;
@@ -31,12 +32,16 @@ router.post("/", sanitizeInput(), async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(409).send("User already Exists");
-    const user = new User({ name, email, password });
+    if (userExists) 
+        return res.status(409).send("User already Exists");
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password,salt)
+    const user = new User({...req.body, password:hashedPassword });
     await user.save();
     res.status(201).json({ message: "Successfully updated" });
-  } catch (error) {
-    res.status(500).send("nope");
+  } 
+  catch (error) {
+    res.status(500).send("Server Error");
   }
 });
 
