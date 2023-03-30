@@ -1,7 +1,9 @@
 import express from "express";
 import User from "../models/User.js";
 import expressValidator from "express-validator";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { keys } from "../config/keys.js";
 
 const router = express.Router();
 const { check, validationResult } = expressValidator;
@@ -12,13 +14,13 @@ router.get("/", (req, res) => {
 
 
 //checks for incoming request data is according to the requirements  
-const sanitizeInput = (next) => {
+const sanitizeInput = () => {
   return [
     check("name", "name is required").notEmpty(),
     check("password", "password must be atleast 8 characters").isLength({
       min: 8,
     }),
-    check("email", "Email is not valid").isEmail(),
+    check("email", "Email is not valid").isEmail()
   ];
 };
 
@@ -38,8 +40,17 @@ router.post("/", sanitizeInput(), async (req, res) => {
     const hashedPassword = await bcrypt.hash(password,salt)
     const user = new User({...req.body, password:hashedPassword });
     await user.save();
-    res.status(201).json({ message: "Successfully updated" });
-  } 
+    //now returning a token on sign up
+    const payload = {
+        user:
+        {
+            id: user.id
+        }
+    }
+    const secret = keys.secretKey;
+    const token = await jwt.sign(payload, secret,{expiresIn: '24h'})
+    res.json({token});
+} 
   catch (error) {
     res.status(500).send("Server Error");
   }
