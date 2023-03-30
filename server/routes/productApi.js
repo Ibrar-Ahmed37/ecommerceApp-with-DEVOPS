@@ -5,9 +5,41 @@ import Product from "../models/Product.js";
 
 const router = express.Router();
 const {check, validationResult} = expressValidator;
-router.get('/',(req,res)=>{
-    res.send('hey from the product api')
+
+//router to get all the products
+router.get('/', async(req,res)=>{
+    console.log('h')
+    try{
+        const products = await Product.find();
+        if(!products){
+            return res.send({msg: "No products are there at the Moment"})
+        }
+        return res.status(200).send(products);
+    }
+    catch(error){
+        res.status(500).send({msg: "Server Failure"})
+    }
 })
+
+//router to get only the product with id from the params
+router.get('/:id',async (req, res)=>{
+    console.log('in id route of get product' , )
+    try
+    {
+        const product = await Product.findById(req.params.id);
+        if(!product){
+            return res.status(400).json({msg: "Product was not Found"})
+        }
+        res.json(product) 
+ 
+    } 
+    catch(error)
+    {
+
+    }
+})
+
+
 const sanitizeInput = () => {
     return [
         check("name","Name is required").notEmpty(),
